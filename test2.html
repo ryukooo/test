@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直近の行動 - MCP Event App</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 16px;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .header-icon {
+            font-size: 24px;
+            margin-right: 8px;
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+        .event-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .event-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s ease;
+        }
+        .event-item:hover {
+            background: #f1f3f4;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .event-title {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 6px;
+            color: #1a73e8;
+        }
+        .event-time {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #5f6368;
+            margin-bottom: 2px;
+        }
+        .event-time-icon {
+            margin-right: 4px;
+            font-size: 14px;
+        }
+        .event-location {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #5f6368;
+        }
+        .event-location-icon {
+            margin-right: 4px;
+            font-size: 14px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #5f6368;
+        }
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        .empty-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .empty-description {
+            font-size: 14px;
+            color: #80868b;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #5f6368;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e0e0e0;
+            border-top-color: #1a73e8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <span class="header-icon">📅</span>
+                <h1 class="header-title">直近の行動</h1>
+            </div>
+            <div id="events-container">
+                <div class="loading">
+                    <span class="spinner"></span>
+                    読み込み中...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // MCP Appsからデータを受け取って表示する関数
+        function renderEvents(events) {
+            const container = document.getElementById('events-container');
+            
+            if (!events || events.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <div class="empty-title">直近の行動はありません</div>
+                        <div class="empty-description">新しい予定を追加してください</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const eventListHTML = events.map(event => `
+                <div class="event-item">
+                    <div class="event-title">${escapeHtml(event.subject || '（件名なし）')}</div>
+                    <div class="event-time">
+                        <span class="event-time-icon">🕐</span>
+                        ${escapeHtml(event.startDateTime || '')}
+                    </div>
+                    ${event.location ? `
+                        <div class="event-location">
+                            <span class="event-location-icon">📍</span>
+                            ${escapeHtml(event.location)}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+            
+            container.innerHTML = `<div class="event-list">${eventListHTML}</div>`;
+        }
+        
+        // HTMLエスケープ関数
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // グローバル関数として公開
+        window.renderEvents = renderEvents;
+        
+        // デバッグ用：デモデータで表示をテスト
+        if (window.location.search.includes('demo=true')) {
+            setTimeout(() => {
+                renderEvents([
+                    {
+                        subject: 'デモ予定',
+                        startDateTime: '2026/05/27 17:00',
+                        location: '会議室A'
+                    }
+                ]);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
+
